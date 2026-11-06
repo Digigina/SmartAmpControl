@@ -1,0 +1,47 @@
+.program nec_receive
+.wrap_target
+start:
+    wait 0 pin 0                ; fallende Flanke des Leader-Bursts
+    set x, 31                   ; ~8,8 ms Mindestlänge
+cancel_loop:
+    jmp pin start [8]           ; Pin High -> Burst zu kurz, neu starten
+    jmp x-- cancel_loop         ; 9+1 = 10 Zyklen pro Durchlauf
+                                ; x abgelaufen -> Burst lang genug
+    wait 1 pin 0                ; Burst zu Ende, Pause beginnt
+    set x, 13
+type_loop:
+    jmp pin loop_dec [6]        ; 8 Zyklen pro Durchlauf
+    jmp is_repeat               ; Pin low -> kurze Pause
+loop_dec:
+    jmp x-- type_loop
+    jmp pin is_message          ; nach ~3,2 ms noch High -> Message
+
+is_repeat:
+    wait 1 pin 0                ; Stop-Burst abwarten
+    irq 1
+    jmp start
+
+is_message:
+    set y, 31
+bit_loop:
+    wait 0 pin 0                ; Bit-Burst beginnt
+    wait 1 pin 0                ; Burst endet, Pause beginnt
+    set x, 4                    ; 6 Schleifen a 285us (10 Zyklen) -> 1425us
+count_loop:
+    jmp pin still_high [8]      ; 9 Zyklen
+    jmp data_valid              ; Pin low: nächster Burst kam früh -> 0
+still_high:
+    jmp x-- count_loop          ; +1 Zyklus = 285 µs pro Durchlauf
+ 
+data_valid:
+    ; Am Ende der High-Phase enthält X den verbleibenden Wert.
+    ; Eine '0' (~562µs) dauert ca. 2-3 Durchläufe -> X ist 2-3
+    ; Eine '1' (~1687µs) dauert ca. 6 Durchläufe -> X läuft komplett auf 0 ab!
+    in pins, 1                    ; x abgelaufen, Pause > ~1,7 ms -> 1
+
+    jmp y-- bit_loop
+    push noblock
+    irq 0
+    wait 0 pin 0                ; Stop-Burst
+    wait 1 pin 0
+.wrap
