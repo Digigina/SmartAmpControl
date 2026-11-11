@@ -17,13 +17,18 @@
 #include "CurrentDisplay.h"
 #include "Protocol.h"
 
-constexpr i2c_inst_t* I2C_PORT = i2c0;
-constexpr uint8_t I2C_SDA = 4;
-constexpr uint8_t I2C_SCL = 5;
+constexpr i2c_inst_t* I2C_ATT  = i2c0;
+constexpr i2c_inst_t* I2C_STEP = i2c1;
 
-constexpr uint8_t SPI_CS_PIN = 17;
-constexpr uint8_t SPI_CLK_PIN = 18;
-constexpr uint8_t SPI_MOSI_PIN = 19;
+constexpr uint8_t STEP_I2C_SDA_PIN = 18;
+constexpr uint8_t STEP_I2C_SCL_PIN = 19;
+
+constexpr uint8_t ATT_I2C_SDA_PIN = 8;
+constexpr uint8_t ATT_I2C_SCL_PIN = 9;
+
+constexpr uint8_t SPI_CS_PIN = 13;
+constexpr uint8_t SPI_CLK_PIN = 10;
+constexpr uint8_t SPI_MOSI_PIN = 11;
 
 extern VolumeSelector  myVolumeSelector;
 extern MenueNode       myMenue;
@@ -31,9 +36,9 @@ extern ChannelSelector myChannelSelector;
 extern CurrentDisplay  myCurrentDisplay;
 
 // Instanz zur Steuerung des Volumen- und Kanalumschalters
-VolChControl mySwitchingDevice(I2C_PORT, 0x24);
+VolChControl mySwitchingDevice(I2C_ATT, 0x24);
 // Instanz zur Einlesung der Step-Encoder-Daten (Drehimpulsgeber)
-AdafruitRotaryQT myStepEncoder(I2C_PORT, 0x36);
+AdafruitRotaryQT myStepEncoder(I2C_STEP, 0x36);
 StepEncBase* g_stepEnc = &myStepEncoder;
 // Instanz zur Einlesung der Stromwerte (Shunt-Widerstand)
 CurrentSensor myCurrentSensor(5.);
@@ -41,7 +46,7 @@ CurrentSensor myCurrentSensor(5.);
 RemoteProtocol myRemoteCtrl(0, &mySwitchingDevice);
 
 
-SpiPort dispSpiPort(spi0, SPI_CS_PIN, SPI_CLK_PIN, SPI_MOSI_PIN);
+SpiPort dispSpiPort(spi1, SPI_CS_PIN, SPI_CLK_PIN, SPI_MOSI_PIN);
 LED_8SEG myDisplay(&dispSpiPort, 2 ); // 2ms repetition rate
 
 MenueNodeEntry myMenueEntries[] = {
@@ -70,10 +75,14 @@ int main() {
     myCurrentSensor.init(); 
  
     // I2C is "open drain", pull ups to keep signal high when no data is being sent
-    i2c_init(I2C_PORT, 100 * 1000);
-    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
+    i2c_init(I2C_STEP, 100 * 1000);
+    gpio_set_function(STEP_I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(STEP_I2C_SCL_PIN, GPIO_FUNC_I2C);
     g_stepEnc->initEncoder();
+
+    i2c_init(I2C_ATT, 100 * 1000);
+    gpio_set_function(ATT_I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(ATT_I2C_SCL_PIN, GPIO_FUNC_I2C);
     mySwitchingDevice.init(UINode::changeEvent);
 
     myVolumeSelector.initialize(g_stepEnc, &myDisplay);
@@ -85,6 +94,7 @@ int main() {
     {
         myDisplay.run();
         UINode::m_currentNode->run();
+        myRemoteCtrl.run();
         sleep_ms(1);
     }
 }

@@ -1,6 +1,9 @@
 #pragma once
 #include "StepEncBase.h"
 
+// ---------------------------------------------------------------------------
+// Klasse zur Ansteuerung des Adafruit Rotary Encoder QT über I2C
+// ---------------------------------------------------------------------------
 class AdafruitRotaryQT : public StepEncBase
 {
     public:

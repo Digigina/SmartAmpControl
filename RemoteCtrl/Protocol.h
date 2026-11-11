@@ -55,4 +55,9 @@ private:
 
     VolChControl* m_pActor;
     uint8_t       m_necAdr;
+    uint8_t       m_lastKey;
+    bool          m_repeatEnable;
+    uint32_t      m_repeateDelay_ms;
+    uint32_t      m_repeatTimeOut_us;
+    uint8_t       m_repeatCount;
 };

@@ -1,2 +1,24 @@
-build
+# Build-Verzeichnisse
+build/
+cmake-build-*/
 !.vscode/*
+
+# Objekt- und Binärdateien
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+*.elf
+*.bin
+*.uf2
+
+# IDE-Dateien
+.vscode/
+.idea/
+*.user
+
+# CMake-Generiertes
+CMakeCache.txt
+CMakeFiles/br

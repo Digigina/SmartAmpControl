@@ -5,8 +5,8 @@
 
 #include "pico/binary_info.h"
 
-
-
+// ---------------------------------------------------------------------------
+// Basisklasse für die Step-Encoder-Klassen, die über I2C angesprochen
 class StepEncBase
 {
     public:

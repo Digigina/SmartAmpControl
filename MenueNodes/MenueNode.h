@@ -10,6 +10,9 @@ struct MenueNodeEntry
     UINode* node;
 };
 
+// ---------------------------------------------------------------------------
+// Klasse zur Auswahl der Menueeinträge über den Step-Encoder
+// ---------------------------------------------------------------------------
 class MenueNode : public UINode
 {
     public:
